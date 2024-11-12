@@ -26,7 +26,7 @@ class Fixaway extends ConsumerWidget {
       title: "Fixaway",
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
-        primaryColor: Colors.deepPurple[200],
+        primaryColor: const Color.fromARGB(255, 94, 37, 202),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
           elevation: 0,

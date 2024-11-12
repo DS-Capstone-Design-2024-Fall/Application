@@ -10,8 +10,8 @@ class CameraScreen extends ConsumerStatefulWidget {
   const CameraScreen({
     super.key,
   });
-  static String routePath = "/home";
-  static String routeName = "home";
+  static String routePath = "/camera";
+  static String routeName = "camera";
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -63,39 +63,52 @@ class _ComplainRegisterScreenState extends ConsumerState<CameraScreen> {
         child: CircularProgressIndicator(),
       ),
       data: (controller) {
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: CameraPreview(controller),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: Sizes.size16),
-                child: GestureDetector(
-                  onTap: () async {
-                    final image = await controller.takePicture();
-                    _goToNextScreen(image.path);
-                  },
-                  child: Container(
-                    width: Sizes.size60,
-                    height: Sizes.size60,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Theme.of(context).primaryColor,
+        return Scaffold(
+          appBar: AppBar(
+            leading: BackButton(
+                color: Colors.black87,
+                style: ButtonStyle(
+                  backgroundColor:
+                      WidgetStatePropertyAll(Colors.white.withOpacity(0.3)),
+                  foregroundColor: WidgetStatePropertyAll(Colors.black),
+                )),
+            backgroundColor: Colors.transparent,
+          ),
+          extendBodyBehindAppBar: true,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: CameraPreview(controller),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: Sizes.size16),
+                  child: GestureDetector(
+                    onTap: () async {
+                      final image = await controller.takePicture();
+                      _goToNextScreen(image.path);
+                    },
+                    child: Container(
+                      width: Sizes.size60,
+                      height: Sizes.size60,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      child: LayoutBuilder(builder: (context, constraints) {
+                        return Icon(
+                          Icons.camera,
+                          color: Colors.white,
+                          size: constraints.maxHeight,
+                        );
+                      }),
                     ),
-                    child: LayoutBuilder(builder: (context, constraints) {
-                      return Icon(
-                        Icons.camera,
-                        color: Colors.white,
-                        size: constraints.maxHeight,
-                      );
-                    }),
                   ),
                 ),
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         );
       },
       error: (error, stackTrace) {
