@@ -1,34 +1,26 @@
 import 'dart:async';
 
+import 'package:fixaway/constants/enums.dart';
 import 'package:fixaway/features/complain/models/config_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ConfigViewModel extends AutoDisposeAsyncNotifier<ConfigModel> {
   late SharedPreferencesAsync _asyncPrefs;
-  late String _title;
-  late String _content;
-  late String _phoneNumber;
-  late String _name;
-  late String _email;
   @override
   FutureOr<ConfigModel> build() async {
+    Map<String, dynamic> data = {};
     // load cache data
     _asyncPrefs = SharedPreferencesAsync();
-    _title = await _asyncPrefs.getString('title') ?? "";
-    _content = await _asyncPrefs.getString('content') ?? "";
-    _phoneNumber = await _asyncPrefs.getString('phoneNumber') ?? "";
-    _name = await _asyncPrefs.getString('name') ?? "";
-    _email = await _asyncPrefs.getString('email') ?? "";
-    late final ConfigModel configModel;
+    data['title'] = await _asyncPrefs.getString('title');
+    data['content'] = await _asyncPrefs.getString('content');
+    data['phoneNumber'] = await _asyncPrefs.getString('phoneNumber');
+    data['name'] = await _asyncPrefs.getString('name');
+    data['email'] = await _asyncPrefs.getString('email');
+    data['association'] = await _asyncPrefs.getString("association");
+    data['consent'] = await _asyncPrefs.getString("consent");
 
-    configModel = ConfigModel(
-      title: _title,
-      content: _content,
-      phoneNumber: _phoneNumber,
-      name: _name,
-      email: _email,
-    );
+    final configModel = ConfigModel.fromJson(data);
 
     return configModel;
   }
@@ -39,6 +31,8 @@ class ConfigViewModel extends AutoDisposeAsyncNotifier<ConfigModel> {
     await _asyncPrefs.setString("phoneNumber", data['phoneNumber']);
     await _asyncPrefs.setString("name", data['name']);
     await _asyncPrefs.setString("email", data['email']);
+    await _asyncPrefs.setString("association", data['association']);
+    await _asyncPrefs.setString("consent", data['consent']);
   }
 
   Future<void> reset() async {
@@ -47,6 +41,8 @@ class ConfigViewModel extends AutoDisposeAsyncNotifier<ConfigModel> {
     await _asyncPrefs.remove('phoneNumber');
     await _asyncPrefs.remove('name');
     await _asyncPrefs.remove('email');
+    await _asyncPrefs.remove('association');
+    await _asyncPrefs.remove('consent');
   }
 }
 
@@ -54,3 +50,11 @@ final configProvider =
     AsyncNotifierProvider.autoDispose<ConfigViewModel, ConfigModel>(
   () => ConfigViewModel(),
 );
+
+final consentProvider = StateProvider<ContentSharingConsent>((ref) {
+  return ContentSharingConsent.no; // 기본값
+});
+
+final associationProvider = StateProvider<Association>((ref) {
+  return Association.individual; // 기본값
+});

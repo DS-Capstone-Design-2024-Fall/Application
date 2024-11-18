@@ -70,7 +70,7 @@ class _ComplainRegisterScreenState extends ConsumerState<CameraScreen> {
                 style: ButtonStyle(
                   backgroundColor:
                       WidgetStatePropertyAll(Colors.white.withOpacity(0.3)),
-                  foregroundColor: WidgetStatePropertyAll(Colors.black),
+                  foregroundColor: const WidgetStatePropertyAll(Colors.black),
                 )),
             backgroundColor: Colors.transparent,
           ),
