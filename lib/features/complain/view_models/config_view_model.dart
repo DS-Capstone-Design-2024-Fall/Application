@@ -12,13 +12,15 @@ class ConfigViewModel extends AutoDisposeAsyncNotifier<ConfigModel> {
     Map<String, dynamic> data = {};
     // load cache data
     _asyncPrefs = SharedPreferencesAsync();
-    data['title'] = await _asyncPrefs.getString('title');
-    data['content'] = await _asyncPrefs.getString('content');
-    data['phoneNumber'] = await _asyncPrefs.getString('phoneNumber');
-    data['name'] = await _asyncPrefs.getString('name');
-    data['email'] = await _asyncPrefs.getString('email');
-    data['association'] = await _asyncPrefs.getString("association");
-    data['consent'] = await _asyncPrefs.getString("consent");
+    data['title'] = await _asyncPrefs.getString('title') ?? "";
+    data['content'] = await _asyncPrefs.getString('content') ?? "";
+    data['phoneNumber'] = await _asyncPrefs.getString('phoneNumber') ?? "";
+    data['name'] = await _asyncPrefs.getString('name') ?? "";
+    data['email'] = await _asyncPrefs.getString('email') ?? "";
+    data['association'] = await _asyncPrefs.getString("association") ??
+        Association.individual.name;
+    data['consent'] =
+        await _asyncPrefs.getString("consent") ?? ContentSharingConsent.no.name;
 
     final configModel = ConfigModel.fromJson(data);
 
@@ -51,10 +53,11 @@ final configProvider =
   () => ConfigViewModel(),
 );
 
+// Radio Button Group value
 final consentProvider = StateProvider<ContentSharingConsent>((ref) {
   return ContentSharingConsent.no; // 기본값
 });
-
+// Radio Button Group value
 final associationProvider = StateProvider<Association>((ref) {
   return Association.individual; // 기본값
 });

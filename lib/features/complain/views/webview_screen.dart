@@ -1,8 +1,15 @@
 import 'package:fixaway/constants/enums.dart';
 import 'package:fixaway/features/complain/view_models/config_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+// #docregion platform_imports
+// Import for Android features.
+// import 'package:webview_flutter_android/webview_flutter_android.dart';
+// Import for iOS/macOS features.
+// import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+// #enddocregion platform_imports
 
 class WebViewScreen extends ConsumerStatefulWidget {
   static String routeName = "web";
@@ -15,9 +22,12 @@ class WebViewScreen extends ConsumerStatefulWidget {
 }
 
 class _WebViewScreenState extends ConsumerState<WebViewScreen> {
-  Future<void> _initializeFormFields(InAppWebViewController controller) async {
+  late final WebViewController _controller;
+
+  Future<void> _initializeFormFields(WebViewController controller) async {
     // Data fetching
     final data = await ref.read(configProvider.future);
+
     // 신고유형
     const setReportType =
         "document.getElementById('ReportTypeSelect').value = \"01\"";
@@ -32,12 +42,7 @@ class _WebViewScreenState extends ConsumerState<WebViewScreen> {
     // 신고자 휴대전화번호 (인증별도)
     final setPhoneNumber =
         "document.getElementById('C_PHONE2').value=\"${data.phoneNumber}\"";
-    // 신고자 이메일 (옵션)
-    final setEmailId =
-        "document.getElementById('email1').value=\"${data.email.split("@")[0]}\"";
-    // 신고자 이메일 도메인 (옵션)
-    final setEmailDomain =
-        "document.getElementById('email2').value=\"${data.email.split("@")[1]}\"";
+
     // 정보제공동의 (필수)
     const checkConsent1 =
         "document.querySelector('#agreeUseMyInfo1').checked=true";
@@ -64,8 +69,6 @@ class _WebViewScreenState extends ConsumerState<WebViewScreen> {
       setContent,
       setName,
       setPhoneNumber,
-      setEmailId,
-      setEmailDomain,
       checkConsent1,
       checkConsent2,
       checkAssociation,
@@ -73,8 +76,89 @@ class _WebViewScreenState extends ConsumerState<WebViewScreen> {
 
     // 일괄 실행
     for (final script in scripts) {
-      await controller.evaluateJavascript(source: script);
+      try {
+        await controller.runJavaScript(script);
+      } catch (e) {
+        // print(e);
+      }
     }
+
+    // 신고자 이메일 (옵션)
+    if (data.email != "") {
+      final email = data.email.split("@");
+      if (email.length > 1) {
+        final setEmailId =
+            "document.getElementById('email1').value=\"${data.email.split("@")[0]}\"";
+        final setEmailDomain =
+            "document.getElementById('email2').value=\"${data.email.split("@")[1]}\"";
+        try {
+          for (final script in [setEmailId, setEmailDomain]) {
+            await controller.runJavaScript(script);
+          }
+        } catch (e) {
+          // print(e);
+        }
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // // #docregion platform_features
+    // late final PlatformWebViewControllerCreationParams params;
+    // if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+    //   params = WebKitWebViewControllerCreationParams(
+    //     allowsInlineMediaPlayback: true,
+    //     mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
+    //   );
+    // } else {
+    //   params = const PlatformWebViewControllerCreationParams();
+    // }
+
+    // final WebViewController controller =
+    //     WebViewController.fromPlatformCreationParams(params);
+    // // #enddocregion platform_features
+
+    _controller = WebViewController();
+    _controller
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            // Update loading bar.
+          },
+          onPageStarted: (String url) {
+            debugPrint('Page started loading: $url');
+          },
+          onPageFinished: (String url) async {
+            debugPrint('Page finished loading: $url');
+            await _initializeFormFields(_controller);
+          },
+          onHttpError: (HttpResponseError error) {},
+          onWebResourceError: (WebResourceError error) {},
+          onNavigationRequest: (NavigationRequest request) {
+            // if (request.url.startsWith('https://www.youtube.com/')) {
+            //   // 네비게이션 차단
+            //   return NavigationDecision.prevent;
+            // }
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..addJavaScriptChannel(
+        'Toaster',
+        onMessageReceived: (JavaScriptMessage message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message.message)),
+          );
+        },
+      )
+      ..loadRequest(
+          Uri.parse('https://www.safetyreport.go.kr/#safereport/safereport'));
+
+    // _controller = controller;
   }
 
   @override
@@ -94,20 +178,7 @@ class _WebViewScreenState extends ConsumerState<WebViewScreen> {
           },
           data: (data) {
             return Scaffold(
-              body: InAppWebView(
-                initialUrlRequest: URLRequest(
-                  url: WebUri(
-                      'https://www.safetyreport.go.kr/#safereport/safereport'),
-                ),
-                initialSettings: InAppWebViewSettings(
-                  javaScriptEnabled: true,
-                  useHybridComposition: true,
-                ),
-                onLoadStop: (controller, url) async {
-                  // webpage 데이터 필드 값 채워넣기
-                  await _initializeFormFields(controller);
-                },
-              ),
+              body: WebViewWidget(controller: _controller),
             );
           },
         );

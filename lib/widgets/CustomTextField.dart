@@ -20,12 +20,13 @@ class CustomTextField extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: Sizes.size16, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              fontSize: Sizes.size16, fontWeight: FontWeight.bold),
         ),
         TextField(
           maxLines: maxLines,
           controller: controller,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             border: OutlineInputBorder(),
           ),
         ),

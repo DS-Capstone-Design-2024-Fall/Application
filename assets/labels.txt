@@ -1,0 +1,3 @@
+braille-block-defect
+sidewalk-block-defect
+bicycle-road-defect
