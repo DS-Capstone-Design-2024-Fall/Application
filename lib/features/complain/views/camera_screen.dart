@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 // import 'package:image_gallery_saver/image_gallery_saver.dart';
 // import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class CameraScreen extends ConsumerStatefulWidget {
   const CameraScreen({
@@ -249,33 +250,37 @@ class _ComplainRegisterScreenState extends ConsumerState<CameraScreen> {
   // 이미지 저장
   Future<String?> _saveImageToLocalDirectory(
       Uint8List bytes, String fileName) async {
-    // 1. 저장소 권한 요청
-    if (await Permission.storage.request().isGranted) {
-      // 2. 저장 경로 확인
-      // Directory? directory = await getExternalStorageDirectory();
-      Directory? directory = Directory("/storage/emulated/0/Pictures");
-      // if (directory == null) {
-      //   return null;
-      // }
+    final plugin = DeviceInfoPlugin();
+    final android = await plugin.androidInfo;
 
-      // 3. 저장소 디렉토리 경로 설정
-      String directoryPath = '${directory.path}/Fixaway';
-      Directory appDir = Directory(directoryPath);
+    // Since you're using Android version 13 (or SDK 33),
+    // there is no need to request storage permission as the app will have access to the files by default.
+    // 1. 저장소 권한
+    final storageStatus = android.version.sdkInt < 33
+        ? await Permission.storage.request()
+        : PermissionStatus.granted;
 
-      if (!await appDir.exists()) {
-        await appDir.create(recursive: true);
-      }
+    // 2. 저장 경로 확인
+    // Directory? directory = await getExternalStorageDirectory();
+    Directory? directory = Directory("/storage/emulated/0/Pictures");
+    // if (directory == null) {
+    //   return null;
+    // }
 
-      // 4. 파일 저장
-      String filePath = '$directoryPath/$fileName';
-      File file = File(filePath);
-      await file.writeAsBytes(bytes);
+    // 3. 저장소 디렉토리 경로 설정
+    String directoryPath = '${directory.path}/Fixaway';
+    Directory appDir = Directory(directoryPath);
 
-      return filePath;
-    } else {
-      // 권한 거부 시 처리
-      return null;
+    if (!await appDir.exists()) {
+      await appDir.create(recursive: true);
     }
+
+    // 4. 파일 저장
+    String filePath = '$directoryPath/$fileName';
+    File file = File(filePath);
+    await file.writeAsBytes(bytes);
+
+    return filePath;
   }
 
   @override
