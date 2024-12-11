@@ -6,3 +6,7 @@
 > https://pixabay.com/ko/service/license-summary/
 
 https://cdn.pixabay.com/photo/2016/11/23/00/39/bicycle-1851497_1280.jpg
+
+# Repo Summary
+학습된 YOLO 모델 (https://github.com/DS-Capstone-Design-2024-Fall/Train-yolo) 을 탑재한  
+Flutter 애플리케이션
